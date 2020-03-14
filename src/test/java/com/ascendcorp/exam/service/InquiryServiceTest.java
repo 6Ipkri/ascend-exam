@@ -2,7 +2,6 @@ package com.ascendcorp.exam.service;
 
 import com.ascendcorp.exam.model.*;
 import com.ascendcorp.exam.proxy.BankProxyGateway;
-import org.apache.log4j.Logger;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,7 +45,7 @@ public class InquiryServiceTest {
                 bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
 
         // Datetime
@@ -56,7 +55,7 @@ public class InquiryServiceTest {
                 bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
 
         // Channel
@@ -66,7 +65,7 @@ public class InquiryServiceTest {
                 bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
 
         // BankCode
@@ -77,7 +76,7 @@ public class InquiryServiceTest {
                 bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
 
         // BankNumber
@@ -86,7 +85,7 @@ public class InquiryServiceTest {
                 bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
 
         // Amount
@@ -95,7 +94,7 @@ public class InquiryServiceTest {
                 bank, 0d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("500", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
     }
 
@@ -103,8 +102,7 @@ public class InquiryServiceTest {
     @Test
     public void should_return_200_when_bank_approved() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("approved");
-        transferResponse.setDescription("approved");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_APPROVED);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -112,7 +110,8 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -122,9 +121,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_invalid_data_without_desc() throws SQLException {
+    public void should_return_501_when_invalid_data_without_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("invalid_data");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_INVALID_DATA_NO_DESC);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -132,13 +131,12 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
-
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("400", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
     }
 
@@ -146,8 +144,7 @@ public class InquiryServiceTest {
     @Test
     public void should_return_1091_with_reason_desc_when_invalid_data_with_desc_and_code() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("invalid_data");
-        transferResponse.setDescription("100:1091:Data type is invalid.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_INVALID_DATA_100_1091);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -155,7 +152,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -165,10 +162,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_invalid_data_with_desc() throws SQLException {
+    public void should_return_501_when_invalid_data_with_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("invalid_data");
-        transferResponse.setDescription("General error.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_INVALID_DATA_NO_DESC);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -176,20 +172,19 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
         assertNotNull(inquiry);
-        assertEquals("400", inquiry.getReasonCode());
+        assertEquals("501", inquiry.getReasonCode());
         assertEquals("General Invalid Data", inquiry.getReasonDesc());
     }
 
     @Test
-    public void should_return_400_when_error_and_desc_is_null() throws SQLException {
+    public void should_return_500_when_error_and_desc_is_null() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("transaction_error");
-
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_TRANSACTION_ERROR_NULL_DESC);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -197,7 +192,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -207,10 +202,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_error_and_no_desc_code() throws SQLException {
+    public void should_return_500_when_error_and_no_desc_code() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("transaction_error");
-        transferResponse.setDescription("Transaction error.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_TRANSACTION_ERROR_NO_DESC);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -218,7 +212,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -228,17 +222,17 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_error_and_desc_3_code() throws SQLException {
+    public void should_return_1091_when_error_and_desc_3_code() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("transaction_error");
-        transferResponse.setDescription("100:1091:Transaction is error with code 1091.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_TRANSACTION_ERROR_100_1091);
+
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
         Bank bank = new Bank("BANK1", "4321000");
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -248,10 +242,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_error_and_desc_2_code() throws SQLException {
+    public void should_return_1092_when_error_and_desc_2_code() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("transaction_error");
-        transferResponse.setDescription("1092:Transaction is error with code 1092.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_TRANSACTION_ERROR_1092);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -259,7 +252,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -269,10 +262,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_400_when_error_and_desc_code_98() throws SQLException {
+    public void should_return_98_when_error_and_desc_code_98() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("transaction_error");
-        transferResponse.setDescription("98:Transaction is error with code 98.");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_TRANSACTION_ERROR_98);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -280,7 +272,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -292,7 +284,7 @@ public class InquiryServiceTest {
     @Test
     public void should_return_501_when_unknown_and_without_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("unknown");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_UNKNOWN_NULL_DESC);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -300,7 +292,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -310,10 +302,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_501_when_unknown_and_desc() throws SQLException {
+    public void should_return_5001_when_unknown_and_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("unknown");
-        transferResponse.setDescription("5001:Unknown error code 5001");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_UNKNOWN_5001);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -321,7 +312,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -331,10 +322,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_501_when_unknown_and_empty_desc() throws SQLException {
+    public void should_return_5002_when_unknown_and_empty_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("unknown");
-        transferResponse.setDescription("5002: ");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_UNKNOWN_5002);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -342,7 +332,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -354,8 +344,7 @@ public class InquiryServiceTest {
     @Test
     public void should_return_501_when_unknown_and_text_desc() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("unknown");
-        transferResponse.setDescription("General Invalid Data code 501");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_UNKNOWN_501);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -363,7 +352,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -375,8 +364,8 @@ public class InquiryServiceTest {
     @Test
     public void should_return_504_when_error_desc_not_support() throws SQLException {
         TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setResponseCode("not_support");
-        transferResponse.setDescription("Not support");
+        transferResponse.setTransferCodeDesc(BankResponseCode.TR_NOT_SUPPORT);
+
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -384,7 +373,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(transferResponse);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(transferResponse);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
 
@@ -402,7 +391,7 @@ public class InquiryServiceTest {
         Reference reference = new Reference("rrivsffv234c",
                 "11223xfgt");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenReturn(null);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenReturn(null);
 
         InquiryServiceResultDTO inquiry = inquiryService.inquiry(transaction, bank, 100d, reference);
         assertNotNull(inquiry);
@@ -411,10 +400,9 @@ public class InquiryServiceTest {
     }
 
     @Test
-    public void should_return_503_when_throw_web_service_exception() throws SQLException {
+    public void should_return_504_when_throw_web_service_exception() throws SQLException {
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenThrow(WebServiceException.class);
-
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenThrow(WebServiceException.class);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -434,7 +422,7 @@ public class InquiryServiceTest {
 
         WebServiceException ex = new WebServiceException("java.net.SocketTimeoutException error");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenThrow(ex);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenThrow(ex);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);
@@ -454,7 +442,7 @@ public class InquiryServiceTest {
 
         WebServiceException ex = new WebServiceException("Server Connection timed out");
 
-        when(bankProxyGateway.requestTransfer(any(Transaction.class) , any(Bank.class),anyDouble() , any(Reference.class))).thenThrow(ex);
+        when(bankProxyGateway.requestTransfer(any(Transaction.class), any(Bank.class), anyDouble(), any(Reference.class))).thenThrow(ex);
 
         Transaction transaction = new Transaction("1234", new Date(),
                 "Mobile", null);

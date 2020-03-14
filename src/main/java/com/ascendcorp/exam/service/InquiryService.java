@@ -2,7 +2,6 @@ package com.ascendcorp.exam.service;
 
 import com.ascendcorp.exam.model.*;
 import com.ascendcorp.exam.proxy.BankProxyGateway;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.ws.WebServiceException;
@@ -13,24 +12,18 @@ public class InquiryService {
     @Autowired
     private BankProxyGateway bankProxyGateway;
 
-    final static Logger log = Logger.getLogger(InquiryService.class);
-    public InquiryServiceResultDTO inquiry(Transaction transaction,
-                                           Bank bank,
-                                           double amount,
-                                           Reference reference
-                                          ) {
+    public InquiryServiceResultDTO inquiry(Transaction transaction, Bank bank, double amount, Reference reference) {
         InquiryServiceResultDTO respDTO = null;
         try {
-            checkInputNotNull( transaction,bank, amount, reference);
-            TransferResponse response = bankProxyGateway.requestTransfer(transaction,bank,amount,reference);
+            checkInputNotNull(transaction, bank, amount, reference);
+            TransferResponse response = bankProxyGateway.requestTransfer(transaction, bank, amount, reference);
 
-            if (response != null)
-            {
+            if (response != null) {
                 respDTO = new InquiryServiceResultDTO();
 
-                respDTO.setRef_no1(response.getReferenceCode1());
-                respDTO.setRef_no2(response.getReferenceCode2());
-                respDTO.setAmount(response.getBalance());
+                respDTO.setRef_no1(response.getReference1());
+                respDTO.setRef_no2(response.getReference2());
+                respDTO.setAmount(response.getAmount());
                 respDTO.setTranID(response.getBankTransactionID());
 
                 if (response.getResponseCode().equalsIgnoreCase("approved")) {
@@ -53,7 +46,7 @@ public class InquiryService {
             if (respDTO == null) {
                 respDTO = new InquiryServiceResultDTO();
 
-                setResponse(respDTO, "500", "General Invalid Data");
+                respDTO.setResponse(BankResponseCode.RE_501_GENERAL_INVALID_DATA.getCode(), BankResponseCode.RE_501_GENERAL_INVALID_DATA.getDescription());
             }
         } catch (WebServiceException r) {
             String faultString = r.getMessage();
@@ -61,16 +54,15 @@ public class InquiryService {
                 respDTO = new InquiryServiceResultDTO();
                 if (faultString != null && (faultString.contains("java.net.SocketTimeoutException")
                         || faultString.contains("Connection timed out"))) {
-                    setResponse(respDTO, "503", "Error timeout");
+                    respDTO.setResponse(BankResponseCode.RE_503_ERROR_TIME_OUT.getCode(), BankResponseCode.RE_503_ERROR_TIME_OUT.getDescription());
                 } else {
-                    setResponse(respDTO, "504", "Internal Application Error");
-
+                    respDTO.setResponse(BankResponseCode.RE_504_INTERNAL_ERROR.getCode(), BankResponseCode.RE_504_INTERNAL_ERROR.getDescription());
                 }
             }
         } catch (Exception e) {
-            if (respDTO == null || (respDTO != null && respDTO.getReasonCode() == null)) {
+            if (respDTO == null || respDTO.getReasonCode() == null) {
                 respDTO = new InquiryServiceResultDTO();
-                setResponse(respDTO, "504", "Internal Application Error");
+                respDTO.setResponse(BankResponseCode.RE_504_INTERNAL_ERROR.getCode(), BankResponseCode.RE_504_INTERNAL_ERROR.getDescription());
             }
         }
         return respDTO;
@@ -96,71 +88,67 @@ public class InquiryService {
         if (amount <= 0) {
             throw new NullPointerException("Amount must more than zero!");
         }
-
     }
 
     private void responseApproved(InquiryServiceResultDTO respDTO, TransferResponse response) {
-        setResponse(respDTO, "200", response.getDescription());
+        respDTO.setResponse(BankResponseCode.RE_200_APPROVED.getCode(), BankResponseCode.RE_200_APPROVED.getDescription());
         respDTO.setAccountName(response.getDescription());
     }
 
     private void responseInvalidData(InquiryServiceResultDTO respDTO, TransferResponse response) {
         String replyDesc = response.getDescription();
+        BankResponseCode generalTransactionError = BankResponseCode.RE_501_GENERAL_INVALID_DATA;
         if (replyDesc != null) {
             String[] respDesc = replyDesc.split(":");
             if (respDesc.length >= 3) {
-                setResponse(respDTO, respDesc[1], respDesc[2]);
+                respDTO.setResponse(respDesc[1], respDesc[2]);
             } else {
-                setResponse(respDTO, "400", "General Invalid Data");
+                respDTO.setResponse(generalTransactionError.getCode(), generalTransactionError.getDescription());
             }
         } else {
-            setResponse(respDTO, "400", "General Invalid Data");
+            respDTO.setResponse(generalTransactionError.getCode(), generalTransactionError.getDescription());
         }
     }
 
     private void responseTransactionError(InquiryServiceResultDTO respDTO, TransferResponse response) {
         String replyDesc = response.getDescription();
         String subIdx1, subIdx2, subIdx3;
+        BankResponseCode generalTransactionError = BankResponseCode.RE_500_GENERAL_TRANSACTION;
         if (replyDesc != null) {
             String[] respDesc = replyDesc.split(":");
             subIdx1 = respDesc[0];
 
             if (respDesc.length == 1) {
-                setResponse(respDTO, "500", "General Transaction Error");
+                respDTO.setResponse(generalTransactionError.getCode(), generalTransactionError.getDescription());
             } else if (respDesc.length == 2) {
                 subIdx2 = respDesc[1];
-                log.debug(subIdx1);
-                setResponse(respDTO, subIdx1, subIdx2);
+                respDTO.setResponse(subIdx1, subIdx2);
             } else {
                 subIdx2 = respDesc[1];
                 subIdx3 = respDesc[2];
 
-                setResponse(respDTO, subIdx2, subIdx3);
+                respDTO.setResponse(subIdx2, subIdx3);
             }
         } else {
-            setResponse(respDTO, "500", "General Transaction Error");
+            respDTO.setResponse(generalTransactionError.getCode(), generalTransactionError.getDescription());
         }
     }
 
     private void responseUnknown(InquiryServiceResultDTO respDTO, TransferResponse response) {
         String replyDesc = response.getDescription();
+        BankResponseCode invalidData = BankResponseCode.RE_501_GENERAL_INVALID_DATA;
         if (replyDesc != null) {
             String[] respDesc = replyDesc.split(":");
             if (respDesc.length >= 2) {
-                setResponse(respDTO, respDesc[0], respDesc[1]);
+                respDTO.setResponse(respDesc[0], respDesc[1]);
                 if (respDTO.getReasonDesc() == null || respDTO.getReasonDesc().trim().length() == 0) {
                     respDTO.setReasonDesc("General Invalid Data");
                 }
             } else {
-                setResponse(respDTO, "501", "General Invalid Data");
+                respDTO.setResponse(invalidData.getCode(), invalidData.getDescription());
             }
         } else {
-            setResponse(respDTO, "501", "General Invalid Data");
+            respDTO.setResponse(invalidData.getCode(), invalidData.getDescription());
         }
-    }
-
-    private void setResponse(InquiryServiceResultDTO respDTO, String code, String description) {
-        respDTO.setReasonCode(code);
-        respDTO.setReasonDesc(description);
     }
 }
