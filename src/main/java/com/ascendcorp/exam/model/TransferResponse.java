@@ -2,13 +2,13 @@ package com.ascendcorp.exam.model;
 
 public class TransferResponse {
 
-
     private String responseCode;
     private String description;
-    private String referenceCode1;
-    private String referenceCode2;
+    private Transaction transaction;
+    private Bank bank;
+    private Reference reference;
     private String amount;
-    private String bankTransactionID;
+
 
     public String getResponseCode() {
         return responseCode;
@@ -27,11 +27,14 @@ public class TransferResponse {
     }
 
     public String getReferenceCode1() {
-        return referenceCode1;
+        if(reference == null) return null;
+        return reference.getReference1();
+
     }
 
     public String getReferenceCode2() {
-        return referenceCode2;
+        if(reference == null) return null;
+        return reference.getReference2();
     }
 
     public String getBalance() {
@@ -39,6 +42,8 @@ public class TransferResponse {
     }
 
     public String getBankTransactionID() {
-        return bankTransactionID;
+        if(transaction == null) return null;
+        return transaction.getTransactionId();
     }
+
 }
